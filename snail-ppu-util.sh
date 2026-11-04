@@ -58,7 +58,7 @@ else
     exit 1
 fi
 
-if ansible ppu -b --become-user=root -m shell -a "chmod +x $ppu_collect && $ppu_collect start $cards 5 $ppu_log" ; then
+if ansible ppu -b --become-user=root -m shell -a "chmod +x $ppu_collect && $ppu_collect start ${cards:-all} 5 $ppu_log" ; then
     echo "ansible ppu run ppu_collect.sh ok"
 else
     echo "ansible ppu run ppu_collect.sh failed"
