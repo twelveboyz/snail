@@ -41,6 +41,9 @@ fi
 
 
 # ansible ppu 
+ppu_collect="/tmp/ppu_collect.sh"
+ppu_log="/tmp/ppu_util.log"
+
 if ansible ppu -m ping ;then
     echo "ansible ppu ping ok"
 else
@@ -48,14 +51,14 @@ else
     exit 1
 fi
 
-if ansible ppu -b --become-user=root -m copy -a "src=ppu_collect.sh dest=/tmp/ppu_collect.sh mode=0755" ; then
+if ansible ppu -b --become-user=root -m copy -a "src=ppu_collect.sh dest=$ppu_collect mode=0755" ; then
     echo "ansible ppu copy ppu_collect.sh ok"
 else
     echo "ansible ppu copy ppu_collect.sh failed"
     exit 1
 fi
 
-if ansible ppu -b --become-user=root -m shell -a "chmod +x /tmp/ppu_collect.sh && /tmp/ppu_collect.sh start $cards 5" ; then
+if ansible ppu -b --become-user=root -m shell -a "chmod +x $ppu_collect && $ppu_collect start ${cards:-all} 5 $ppu_log" ; then
     echo "ansible ppu run ppu_collect.sh ok"
 else
     echo "ansible ppu run ppu_collect.sh failed"
@@ -66,7 +69,7 @@ fi
 ppu_usage(){
     local startTime=$1
     local endTime=$2
-    ansible ppu -b --become-user=root -m shell -a "/tmp/ppu_utilization.log analyze $startTime $endTime" | tee -a "$result_file"
+    ansible ppu -b --become-user=root -m shell -a "$ppu_collect analyze \"$startTime\" \"$endTime\" $ppu_log" | tee -a "$result_file"
 }
 
 
@@ -409,7 +412,7 @@ auto_evalscopePerf_slo 10475 1024 1036077 extra_long_1M-1k-99 '[{"p99_ttft": "<=
 
 
 
-if ansible ppu -b --become-user=root -m shell -a "/tmp/ppu_collect.sh stop" ; then
+if ansible ppu -b --become-user=root -m shell -a "$ppu_collect stop" ; then
     echo "ansible ppu run ppu_collect.sh stop ok"
 else
     echo "ansible ppu run ppu_collect.sh stop failed"
